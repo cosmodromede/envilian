@@ -37,20 +37,21 @@
         }
 
         header.banner {
-    height: 140px;
-    width: 100%;
-    background-color: #c71585;
-    background-image: url('banner.png');
-    background-size: cover;
-    background-position: center -10px;
-    flex-shrink: 0;
-    border-bottom: 3px solid var(--sidebar-border);
-}
+            height: 140px;
+            width: 100%;
+            background-color: #c71585;
+            background-image: url('banner.png');
+            background-size: cover;
+            background-position: center;
+            flex-shrink: 0;
+            border-bottom: 3px solid var(--sidebar-border);
+        }
 
         .workspace {
             display: flex;
             flex: 1;
             overflow: hidden;
+            position: relative;
         }
 
         nav.sidebar {
@@ -352,6 +353,48 @@
             letter-spacing: 0.05em;
             margin-top: 4px;
         }
+
+        /* Language Switcher Badge at Bottom Right */
+        .lang-switcher {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 6px;
+            border: 2px solid var(--card-border);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .lang-btn {
+            width: 36px;
+            height: 24px;
+            background-size: cover;
+            background-position: center;
+            border: 2px solid var(--card-border);
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.2s ease, border-color 0.2s ease;
+        }
+
+        .lang-btn:hover {
+            opacity: 0.8;
+        }
+
+        .lang-btn.active {
+            opacity: 1;
+            border-color: var(--sidebar-color);
+        }
+
+        #envButton {
+            background-image: url('flag.png');
+        }
+
+        #enButton {
+            background-image: url('en_flag.png');
+        }
     </style>
 </head>
 <body>
@@ -374,6 +417,11 @@
         <main class="content-area">
             <div class="content-container" id="contentContainer"></div>
         </main>
+
+        <div class="lang-switcher">
+            <button class="lang-btn active" id="envButton" title="Envilian Language"></button>
+            <button class="lang-btn" id="enButton" title="English Language"></button>
+        </div>
     </div>
 
     <script>
@@ -384,18 +432,86 @@
         const contentContainer = document.getElementById('contentContainer');
         const searchInput = document.getElementById('searchInput');
         const translateNavBtn = document.getElementById('translateNavBtn');
+        const envButton = document.getElementById('envButton');
+        const enButton = document.getElementById('enButton');
 
         let activeLetterButton = null;
         let isTranslateActive = false;
+        let currentLang = 'env'; // 'env' for Envilian, 'en' for English
+
+        // Language text dictionaries
+        const langData = {
+            env: {
+                title: 'Änviilienêske Wódorleytsora',
+                welcomeDesc: 'Undäkkeraên de lefere vokabularja fän de Änviilienêske tole. Selekteraên ine vilkejrixe lätter fän de navikatja sidebar fän te linêker um tärm te browseaên, vortela, en bezixeniis.',
+                totalWords: 'Totale vorta',
+                translateTitle: 'Anêgelterrenêsk nore Änviilienêsk Färtaskelora',
+                translateDesc: 'Typaên ine Anêgelterrenêsk vort um de Änviilienêske färtaskelori te syxera amonêge alle wódorleytsora bustanda.',
+                translateBtn: 'Färtakselaên',
+                placeholderSearch: 'Syxaên...',
+                placeholderTranslate: 'Enteraên Anêgelterrenêske vort...',
+                navTranslate: 'Färtakselaên',
+                colEnvilian: 'Änviilienêsk',
+                colPronunciation: 'Utspreäk',
+                colTranslation: 'Färtakselori'
+            },
+            en: {
+                title: 'Envilian Dictionary',
+                welcomeDesc: 'Explore the living vocabulary translated into English. Select any letter from the navigation sidebar on your left to browse terms, roots, and meanings.',
+                totalWords: 'Total Words',
+                translateTitle: 'English Translator',
+                translateDesc: 'Type an English word below to look up its translation across all dictionary files.',
+                translateBtn: 'Translate',
+                placeholderSearch: 'Search...',
+                placeholderTranslate: 'Enter English word...',
+                navTranslate: 'Translate',
+                colEnvilian: 'Term',
+                colPronunciation: 'Pronunciation',
+                colTranslation: 'Meaning'
+            }
+        };
+
+        // Handle language switcher click states
+        envButton.addEventListener('click', () => {
+            currentLang = 'env';
+            envButton.classList.add('active');
+            enButton.classList.remove('active');
+            refreshCurrentView();
+        });
+
+        enButton.addEventListener('click', () => {
+            currentLang = 'en';
+            enButton.classList.add('active');
+            envButton.classList.remove('active');
+            refreshCurrentView();
+        });
+
+        // Keeps track of what the user is currently looking at so switching languages updates the text seamlessly
+        let currentViewState = { type: 'welcome' };
+
+        function refreshCurrentView() {
+            if (currentViewState.type === 'welcome') {
+                renderWelcomeScreen();
+            } else if (currentViewState.type === 'translate') {
+                renderTranslateScreen();
+            } else if (currentViewState.type === 'letter') {
+                selectLetter(currentViewState.letter, currentViewState.btnElement, true);
+            } else if (currentViewState.type === 'search') {
+                // re-trigger search query view
+                triggerSearch(currentViewState.query);
+            }
+        }
 
         function initAlphabetSidebar() {
             alphabet.forEach(letter => {
                 const btn = document.createElement('button');
                 btn.className = 'letter-btn';
                 btn.textContent = letter;
-                btn.addEventListener('click', () => selectLetter(letter, btn));
+                btn.addEventListener('click', () => selectLetter(letter, btn, false));
                 alphabetList.appendChild(btn);
             });
+            translateNavBtn.textContent = langData[currentLang].navTranslate;
+            searchInput.placeholder = langData[currentLang].placeholderSearch;
         }
 
         function clearActiveStates() {
@@ -408,6 +524,7 @@
         }
 
         async function renderWelcomeScreen() {
+            currentViewState = { type: 'welcome' };
             clearActiveStates();
             contentContainer.innerHTML = '';
             
@@ -421,26 +538,24 @@
             card.appendChild(logo);
 
             const title = document.createElement('h1');
-            title.textContent = 'Änviilienêske Wódorleytsora';
+            title.textContent = langData[currentLang].title;
             card.appendChild(title);
 
             const desc = document.createElement('p');
-            desc.textContent = 'Explore the living vocabulary of the Envilian language. Select any letter from the navigation sidebar on your left to browse terms, roots, and meanings.';
+            desc.textContent = langData[currentLang].welcomeDesc;
             card.appendChild(desc);
 
-            // Stats Counter Container (Total Words only)
             const statsContainer = document.createElement('div');
             statsContainer.className = 'stats-container';
             statsContainer.innerHTML = `
                 <div class="stat-box">
                     <span class="stat-number" id="totalWords">...</span>
-                    <span class="stat-label">Total Words</span>
+                    <span class="stat-label">${langData[currentLang].totalWords}</span>
                 </div>
             `;
             card.appendChild(statsContainer);
             contentContainer.appendChild(card);
 
-            // Calculate total word count asynchronously
             let wordCount = 0;
 
             for (let letter of alphabet) {
@@ -462,6 +577,7 @@
         }
 
         function renderTranslateScreen() {
+            currentViewState = { type: 'translate' };
             clearActiveStates();
             isTranslateActive = true;
             translateNavBtn.classList.add('active');
@@ -472,11 +588,11 @@
             card.className = 'translate-card';
 
             const title = document.createElement('h1');
-            title.textContent = 'English to Envilian Translator';
+            title.textContent = langData[currentLang].translateTitle;
             card.appendChild(title);
 
             const desc = document.createElement('p');
-            desc.textContent = 'Type an English word below to look up its translation across all dictionary files.';
+            desc.textContent = langData[currentLang].translateDesc;
             card.appendChild(desc);
 
             const box = document.createElement('div');
@@ -486,12 +602,12 @@
             input.type = 'text';
             input.className = 'translator-input';
             input.id = 'translatorInput';
-            input.placeholder = 'Enter English word...';
+            input.placeholder = langData[currentLang].placeholderTranslate;
             box.appendChild(input);
 
             const btn = document.createElement('button');
             btn.className = 'translator-btn';
-            btn.textContent = 'Translate';
+            btn.textContent = langData[currentLang].translateBtn;
             box.appendChild(btn);
 
             card.appendChild(box);
@@ -535,7 +651,7 @@
                     resultArea.className = 'translation-result';
                     let htmlContent = `<strong>Results for "${query}":</strong><br><br>`;
                     foundMatches.forEach(match => {
-                        htmlContent += `• <strong>Envilian:</strong> ${match[0]} | <strong>Pronunciation:</strong> ${match[1]} | <strong>Translation:</strong> ${match[2]}<br>`;
+                        htmlContent += `• <strong>${langData[currentLang].colEnvilian}:</strong> ${match[0]} | <strong>${langData[currentLang].colPronunciation}:</strong> ${match[1]} | <strong>${langData[currentLang].colTranslation}:</strong> ${match[2]}<br>`;
                     });
                     resultArea.innerHTML = htmlContent;
                 } else {
@@ -550,10 +666,13 @@
             });
         }
 
-        async function selectLetter(letter, btnElement) {
-            clearActiveStates();
-            activeLetterButton = btnElement;
-            activeLetterButton.classList.add('active');
+        async function selectLetter(letter, btnElement, isRefresh = false) {
+            if (!isRefresh) {
+                currentViewState = { type: 'letter', letter: letter, btnElement: btnElement };
+                clearActiveStates();
+                activeLetterButton = btnElement;
+                activeLetterButton.classList.add('active');
+            }
 
             contentContainer.innerHTML = '';
             const loadingMsg = document.createElement('div');
@@ -606,7 +725,7 @@
             table.className = 'word-table';
 
             const thead = document.createElement('tr');
-            ['Envilian', 'Pronunciation', 'Translation'].forEach(headerText => {
+            [langData[currentLang].colEnvilian, langData[currentLang].colPronunciation, langData[currentLang].colTranslation].forEach(headerText => {
                 const th = document.createElement('th');
                 th.textContent = headerText;
                 thead.appendChild(th);
@@ -630,37 +749,41 @@
             contentContainer.appendChild(tableCard);
         }
 
-        searchInput.addEventListener('keypress', async function (e) {
+        searchInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 const query = searchInput.value.trim().toLowerCase();
                 if (!query) return;
-
-                clearActiveStates();
-
-                contentContainer.innerHTML = '';
-                const loadingMsg = document.createElement('div');
-                loadingMsg.className = 'state-message';
-                loadingMsg.textContent = `Searching for "${query}" across all dictionary files...`;
-                contentContainer.appendChild(loadingMsg);
-
-                let allMatches = [];
-
-                for (let letter of alphabet) {
-                    const fileName = letter.toLowerCase();
-                    try {
-                        const response = await fetch(`${fileName}.txt`);
-                        if (response.ok) {
-                            const textData = await response.text();
-                            const lines = textData.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-                            const matches = lines.filter(line => line.toLowerCase().includes(query));
-                            allMatches = allMatches.concat(matches);
-                        }
-                    } catch (err) {}
-                }
-
-                renderSearchResults(query, allMatches);
+                triggerSearch(query);
             }
         });
+
+        async function triggerSearch(query) {
+            currentViewState = { type: 'search', query: query };
+            clearActiveStates();
+
+            contentContainer.innerHTML = '';
+            const loadingMsg = document.createElement('div');
+            loadingMsg.className = 'state-message';
+            loadingMsg.textContent = `Searching for "${query}" across all dictionary files...`;
+            contentContainer.appendChild(loadingMsg);
+
+            let allMatches = [];
+
+            for (let letter of alphabet) {
+                const fileName = letter.toLowerCase();
+                try {
+                    const response = await fetch(`${fileName}.txt`);
+                    if (response.ok) {
+                        const textData = await response.text();
+                        const lines = textData.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                        const matches = lines.filter(line => line.toLowerCase().includes(query));
+                        allMatches = allMatches.concat(matches);
+                    }
+                } catch (err) {}
+            }
+
+            renderSearchResults(query, allMatches);
+        }
 
         function renderSearchResults(query, matches) {
             contentContainer.innerHTML = '';
@@ -685,7 +808,7 @@
             table.className = 'word-table';
 
             const thead = document.createElement('tr');
-            ['Envilian', 'Pronunciation', 'Translation'].forEach(headerText => {
+            [langData[currentLang].colEnvilian, langData[currentLang].colPronunciation, langData[currentLang].colTranslation].forEach(headerText => {
                 const th = document.createElement('th');
                 th.textContent = headerText;
                 thead.appendChild(th);
