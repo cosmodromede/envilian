@@ -6,17 +6,29 @@
     <title>Envilian Dictionary</title>
     <style>
         :root {
-            --bg-color: #f7f5f0;
-            --sidebar-color: #234d58;
-            --sidebar-border: #16323a;
-            --card-bg: #ffffff;
-            --card-border: #d0cbc2;
-            --text-main: #2c3e50;
-            --text-muted: #6c757d;
-            --accent-hover: rgba(255, 255, 255, 0.15);
-            --active-bg: #ffffff;
-            --active-text: #234d58;
-            --active-border: #16323a;
+           :root {
+    --bg-color: #f7f5f0;
+    --sidebar-color: #c71585;      /* Dark hot pink */
+    --sidebar-border: #900f60;     /* Deeper pink border */
+    --card-bg: #ffffff;
+    --card-border: #d0cbc2;
+    --text-main: #2c3e50;
+    --text-muted: #6c757d;
+    --accent-hover: rgba(255, 255, 255, 0.2);
+    --active-bg: #ffffff;
+    --active-text: #c71585;
+    --active-border: #900f60;
+}
+
+body {
+    font-family: 'Savigny', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
         }
 
         * {
