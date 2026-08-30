@@ -82,7 +82,7 @@
             opacity: 0.85;
         }
 
-        /* Search Bar Styling */
+        /* Search Bar & Translate Nav Styling */
         .search-container {
             padding: 10px 8px;
             width: 100%;
@@ -118,6 +118,29 @@
             color: var(--text-muted);
         }
 
+        .translate-nav-btn {
+            width: 60px;
+            height: 32px;
+            margin-bottom: 8px;
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+            text-transform: uppercase;
+        }
+
+        .translate-nav-btn:hover, .translate-nav-btn.active {
+            background-color: #ffffff;
+            color: var(--sidebar-color);
+            border-color: var(--active-border);
+        }
+
         .alphabet-list {
             flex: 1;
             width: 100%;
@@ -126,7 +149,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 6px 0 12px 0;
+            padding: 4px 0 12px 0;
             gap: 10px;
             scrollbar-width: none;
         }
@@ -178,7 +201,7 @@
             max-width: 850px;
         }
 
-        /* Section Header for Letter Views */
+        /* Section Header for Views */
         .section-header {
             font-size: 2rem;
             font-weight: 700;
@@ -190,8 +213,8 @@
             letter-spacing: 0.05em;
         }
 
-        /* Welcome Screen */
-        .welcome-card {
+        /* Welcome Screen & Translate Card */
+        .welcome-card, .translate-card {
             background: var(--card-bg);
             border: 2px solid var(--card-border);
             border-radius: 0;
@@ -208,16 +231,63 @@
             display: block;
         }
 
-        .welcome-card h1 {
+        .welcome-card h1, .translate-card h1 {
             font-size: 2.2rem;
             color: var(--sidebar-color);
             margin-bottom: 16px;
         }
 
-        .welcome-card p {
+        .welcome-card p, .translate-card p {
             font-size: 1.1rem;
             color: var(--text-muted);
             line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        /* Translator Specific Elements */
+        .translator-box {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .translator-input {
+            flex: 1;
+            max-width: 400px;
+            padding: 12px 16px;
+            border: 2px solid var(--card-border);
+            font-size: 1rem;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            outline: none;
+        }
+
+        .translator-input:focus {
+            border-color: var(--sidebar-color);
+        }
+
+        .translator-btn {
+            background-color: var(--sidebar-color);
+            color: #ffffff;
+            border: 2px solid var(--sidebar-border);
+            padding: 0 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .translator-btn:hover {
+            opacity: 0.85;
+        }
+
+        .translation-result {
+            margin-top: 20px;
+            padding: 20px;
+            background: #fbf9f5;
+            border: 2px solid var(--card-border);
+            font-size: 1.1rem;
+            color: var(--text-main);
         }
 
         /* Table Card Container */
@@ -277,12 +347,15 @@
                 <input type="text" id="searchInput" class="search-input" placeholder="Search...">
             </div>
 
+            <button class="translate-nav-btn" id="translateNavBtn" title="Translator Tool">Translate</button>
+
             <div class="alphabet-list" id="alphabetList"></div>
         </nav>
 
         <main class="content-area">
             <div class="content-container" id="contentContainer">
-                </div>
+                <!-- Dynamically populated via JS -->
+            </div>
         </main>
     </div>
 
@@ -293,8 +366,10 @@
         const alphabetList = document.getElementById('alphabetList');
         const contentContainer = document.getElementById('contentContainer');
         const searchInput = document.getElementById('searchInput');
+        const translateNavBtn = document.getElementById('translateNavBtn');
 
         let activeLetterButton = null;
+        let isTranslateActive = false;
 
         function initAlphabetSidebar() {
             alphabet.forEach(letter => {
@@ -306,7 +381,17 @@
             });
         }
 
+        function clearActiveStates() {
+            if (activeLetterButton) {
+                activeLetterButton.classList.remove('active');
+                activeLetterButton = null;
+            }
+            isTranslateActive = false;
+            translateNavBtn.classList.remove('active');
+        }
+
         function renderWelcomeScreen() {
+            clearActiveStates();
             contentContainer.innerHTML = '';
             
             const card = document.createElement('div');
@@ -319,7 +404,7 @@
             card.appendChild(logo);
 
             const title = document.createElement('h1');
-            title.textContent = 'Änviilienêske Wódorleêyste';
+            title.textContent = 'Envilian Dictionary';
             card.appendChild(title);
 
             const desc = document.createElement('p');
@@ -329,10 +414,92 @@
             contentContainer.appendChild(card);
         }
 
+        function renderTranslateScreen() {
+            clearActiveStates();
+            isTranslateActive = true;
+            translateNavBtn.classList.add('active');
+
+            contentContainer.innerHTML = '';
+
+            const card = document.createElement('div');
+            card.className = 'translate-card';
+
+            const title = document.createElement('h1');
+            title.textContent = 'English to Envilian Translator';
+            card.appendChild(title);
+
+            const desc = document.createElement('p');
+            desc.textContent = 'Type an English word below to look up its translation in the Envilian dictionary.';
+            card.appendChild(desc);
+
+            const box = document.createElement('div');
+            box.className = 'translator-box';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'translator-input';
+            input.id = 'translatorInput';
+            input.placeholder = 'Enter English word...';
+            box.appendChild(input);
+
+            const btn = document.createElement('button');
+            btn.className = 'translator-btn';
+            btn.textContent = 'Translate';
+            box.appendChild(btn);
+
+            card.appendChild(box);
+
+            const resultArea = document.createElement('div');
+            resultArea.id = 'translatorResult';
+            resultArea.style.display = 'none';
+            card.appendChild(resultArea);
+
+            contentContainer.appendChild(card);
+
+            // Hook up translation lookup logic
+            const performTranslation = async () => {
+                const query = input.value.trim().toLowerCase();
+                if (!query) return;
+
+                resultArea.style.display = 'block';
+                resultArea.className = 'state-message';
+                resultArea.textContent = `Translating "${query}"...`;
+
+                try {
+                    // For now checking a.txt (you can expand to loop through all letter files later)
+                    const response = await fetch('a.txt');
+                    if (!response.ok) throw new Error('Dictionary file not found');
+                    const textData = await response.text();
+
+                    const lines = textData.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                    // Column 3 is translation (index 2 when split by ' - ')
+                    const match = lines.find(line => {
+                        const cells = line.split(' - ').map(c => c.trim());
+                        return cells[2] && cells[2].toLowerCase() === query;
+                    });
+
+                    if (match) {
+                        const cells = match.split(' - ').map(c => c.trim());
+                        resultArea.className = 'translation-result';
+                        resultArea.innerHTML = `<strong>English:</strong> ${cells[2]}<br><strong>Envilian:</strong> ${cells[0]}<br><strong>Pronunciation:</strong> ${cells[1]}`;
+                    } else {
+                        resultArea.className = 'translation-result';
+                        resultArea.textContent = `No translation found for "${query}".`;
+                    }
+                } catch (err) {
+                    resultArea.className = 'translation-result';
+                    resultArea.textContent = `Error reading dictionary files.`;
+                }
+            };
+
+            btn.addEventListener('click', performTranslation);
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') performTranslation();
+            });
+        }
+
         async function selectLetter(letter, btnElement) {
-            if (activeLetterButton) {
-                activeLetterButton.classList.remove('active');
-            }
+            clearActiveStates();
             activeLetterButton = btnElement;
             activeLetterButton.classList.add('active');
 
@@ -386,6 +553,14 @@
             const table = document.createElement('table');
             table.className = 'word-table';
 
+            const thead = document.createElement('tr');
+            ['Envilian', 'Pronunciation', 'Translation'].forEach(headerText => {
+                const th = document.createElement('th');
+                th.textContent = headerText;
+                thead.appendChild(th);
+            });
+            table.appendChild(thead);
+
             lines.forEach(line => {
                 const tr = document.createElement('tr');
                 const cells = line.split(' - ').map(c => c.trim());
@@ -409,10 +584,7 @@
                 const query = searchInput.value.trim().toLowerCase();
                 if (!query) return;
 
-                if (activeLetterButton) {
-                    activeLetterButton.classList.remove('active');
-                    activeLetterButton = null;
-                }
+                clearActiveStates();
 
                 contentContainer.innerHTML = '';
                 const loadingMsg = document.createElement('div');
@@ -461,6 +633,14 @@
             const table = document.createElement('table');
             table.className = 'word-table';
 
+            const thead = document.createElement('tr');
+            ['Envilian', 'Pronunciation', 'Translation'].forEach(headerText => {
+                const th = document.createElement('th');
+                th.textContent = headerText;
+                thead.appendChild(th);
+            });
+            table.appendChild(thead);
+
             matches.forEach(line => {
                 const tr = document.createElement('tr');
                 const cells = line.split(' - ').map(c => c.trim());
@@ -479,12 +659,13 @@
         }
 
         homeBtn.addEventListener('click', () => {
-            if (activeLetterButton) {
-                activeLetterButton.classList.remove('active');
-                activeLetterButton = null;
-            }
             searchInput.value = '';
             renderWelcomeScreen();
+        });
+
+        translateNavBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            renderTranslateScreen();
         });
 
         initAlphabetSidebar();
