@@ -6,29 +6,17 @@
     <title>Envilian Dictionary</title>
     <style>
         :root {
-           :root {
-    --bg-color: #f7f5f0;
-    --sidebar-color: #c71585;      /* Dark hot pink */
-    --sidebar-border: #900f60;     /* Deeper pink border */
-    --card-bg: #ffffff;
-    --card-border: #d0cbc2;
-    --text-main: #2c3e50;
-    --text-muted: #6c757d;
-    --accent-hover: rgba(255, 255, 255, 0.2);
-    --active-bg: #ffffff;
-    --active-text: #c71585;
-    --active-border: #900f60;
-}
-
-body {
-    font-family: 'Savigny', sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-main);
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
-}
+            --bg-color: #f7f5f0;
+            --sidebar-color: #c71585;      /* Dark hot pink */
+            --sidebar-border: #900f60;     /* Deeper pink border */
+            --card-bg: #ffffff;
+            --card-border: #d0cbc2;
+            --text-main: #2c3e50;
+            --text-muted: #6c757d;
+            --accent-hover: rgba(255, 255, 255, 0.2);
+            --active-bg: #ffffff;
+            --active-text: #c71585;
+            --active-border: #900f60;
         }
 
         * {
@@ -38,7 +26,7 @@ body {
         }
 
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
             display: flex;
@@ -47,14 +35,15 @@ body {
             overflow: hidden;
         }
 
-        /* Banner Styling */
+        /* Banner Styling - adjusted to contain the full banner image cleanly */
         header.banner {
             height: 140px;
             width: 100%;
-            background-color: #1b3d45;
+            background-color: #c71585;
             background-image: url('banner.png');
-            background-size: cover;
-            background-position: center;
+            background-size: contain; /* Ensures the whole banner fits without being cropped */
+            background-repeat: no-repeat;
+            background-position: left center;
             flex-shrink: 0;
             border-bottom: 3px solid var(--sidebar-border);
         }
@@ -205,7 +194,7 @@ body {
 
         .stats-badge {
             display: inline-block;
-            background: rgba(35, 77, 88, 0.08);
+            background: rgba(199, 21, 133, 0.08);
             border: 2px solid var(--sidebar-color);
             color: var(--sidebar-color);
             padding: 8px 16px;
@@ -222,7 +211,7 @@ body {
             padding: 24px;
         }
 
-        /* Table Styling (Hard-edged & Blocky) */
+        /* Table Styling */
         .word-table {
             width: 100%;
             border-collapse: collapse;
@@ -238,7 +227,7 @@ body {
         }
 
         .word-table th {
-            background-color: rgba(35, 77, 88, 0.08);
+            background-color: rgba(199, 21, 133, 0.08);
             color: var(--sidebar-color);
             font-weight: 700;
         }
@@ -277,8 +266,7 @@ body {
     </div>
 
     <script>
-        // Alphabet list remains capital for display, but lowercase filenames are used for fetch
-        const alphabet = ['a', 'ä', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'ẍ', 'y', 'z'];
+        const alphabet = ['A', 'Ä', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'X', 'Ẍ', 'Y', 'Z'];
 
         const homeBtn = document.getElementById('homeBtn');
         const alphabetList = document.getElementById('alphabetList');
@@ -286,7 +274,6 @@ body {
 
         let activeLetterButton = null;
 
-        // Render Sidebar Alphabet Buttons
         function initAlphabetSidebar() {
             alphabet.forEach(letter => {
                 const btn = document.createElement('button');
@@ -297,7 +284,6 @@ body {
             });
         }
 
-        // Render Welcome / Home Screen
         function renderWelcomeScreen() {
             contentContainer.innerHTML = '';
             
@@ -329,7 +315,6 @@ body {
             contentContainer.appendChild(card);
         }
 
-        // Fetch and Display Letter Entries (Using lowercase filenames like a.txt, ä.txt, etc.)
         async function selectLetter(letter, btnElement) {
             if (activeLetterButton) {
                 activeLetterButton.classList.remove('active');
@@ -343,7 +328,6 @@ body {
             loadingMsg.textContent = `Loading entries for "${letter}"...`;
             contentContainer.appendChild(loadingMsg);
 
-            // Convert letter to lowercase for fetching lowercase text files (e.g., a.txt, ä.txt)
             const fileName = letter.toLowerCase();
 
             try {
@@ -364,11 +348,9 @@ body {
             }
         }
 
-        // Parse File Content and Render Pure Table View
         function renderEntries(letter, fileContent) {
             contentContainer.innerHTML = '';
 
-            // 1. Title Header ("WORDS - A")
             const sectionTitle = document.createElement('h2');
             sectionTitle.className = 'section-header';
             sectionTitle.textContent = `Words - ${letter}`;
@@ -384,7 +366,6 @@ body {
                 return;
             }
 
-            // 2. Wrap Table Inside Card Container
             const tableCard = document.createElement('div');
             tableCard.className = 'table-card';
 
@@ -408,7 +389,6 @@ body {
             contentContainer.appendChild(tableCard);
         }
 
-        // Home Button Event Listener
         homeBtn.addEventListener('click', () => {
             if (activeLetterButton) {
                 activeLetterButton.classList.remove('active');
@@ -417,7 +397,6 @@ body {
             renderWelcomeScreen();
         });
 
-        // Initialize App on Load
         initAlphabetSidebar();
         renderWelcomeScreen();
     </script>
