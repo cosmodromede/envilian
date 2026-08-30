@@ -202,66 +202,27 @@
             font-size: 0.9rem;
         }
 
-        /* Word Entry Cards */
-        .word-list {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .word-card {
+        /* Table Card Container */
+        .table-card {
             background: var(--card-bg);
             border: 2px solid var(--card-border);
             border-radius: 0;
-            padding: 30px;
-        }
-
-        .word-header {
-            display: flex;
-            align-items: baseline;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 16px;
-            border-bottom: 2px solid var(--card-border);
-            padding-bottom: 14px;
-        }
-
-        .word-title {
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: var(--sidebar-color);
-        }
-
-        .word-pos {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: #b45309;
-            background: #fffbeb;
-            border: 2px solid #fcd34d;
-            padding: 3px 8px;
-            border-radius: 0;
-            text-transform: lowercase;
-        }
-
-        .word-definition {
-            font-size: 1.05rem;
-            line-height: 1.7;
-            color: var(--text-main);
+            padding: 24px;
         }
 
         /* Table Styling (Hard-edged & Blocky) */
         .word-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 14px 0;
             border: 2px solid var(--card-border);
         }
 
         .word-table th, .word-table td {
             border: 1px solid var(--card-border);
-            padding: 10px 14px;
+            padding: 12px 16px;
             text-align: left;
-            font-size: 0.95rem;
+            font-size: 1rem;
+            color: var(--text-main);
         }
 
         .word-table th {
@@ -272,34 +233,6 @@
 
         .word-table tr:nth-child(even) {
             background-color: #fbf9f5;
-        }
-
-        /* Markdown Styles inside Definitions */
-        .word-definition h3 {
-            font-size: 1.2rem;
-            color: var(--sidebar-color);
-            margin: 16px 0 8px 0;
-        }
-
-        .word-definition blockquote {
-            border-left: 4px solid var(--sidebar-color);
-            border-top: 1px solid var(--card-border);
-            border-right: 1px solid var(--card-border);
-            border-bottom: 1px solid var(--card-border);
-            padding: 10px 16px;
-            margin: 12px 0;
-            color: var(--text-muted);
-            font-style: italic;
-            background: #f4f1eb;
-            border-radius: 0;
-        }
-
-        .word-definition p {
-            margin-bottom: 10px;
-        }
-
-        .word-definition p:last-child {
-            margin-bottom: 0;
         }
 
         /* States (Loading / Error / Empty) */
@@ -326,11 +259,13 @@
 
         <main class="content-area">
             <div class="content-container" id="contentContainer">
-                </div>
+                <!-- Dynamically populated via JS -->
+            </div>
         </main>
     </div>
 
     <script>
+        // Alphabet list remains capital for display, but lowercase filenames are used for fetch
         const alphabet = ['a', 'ä', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'ẍ', 'y', 'z'];
 
         const homeBtn = document.getElementById('homeBtn');
@@ -348,87 +283,6 @@
                 btn.addEventListener('click', () => selectLetter(letter, btn));
                 alphabetList.appendChild(btn);
             });
-        }
-
-        // Advanced Parser Engine (Handles Markdown & Hyphenated Table Rows)
-        function parseMarkdown(rawText) {
-            const lines = rawText.split('\n');
-            const container = document.createElement('div');
-            container.className = 'word-definition';
-
-            let currentParagraph = null;
-            let currentTableRows = [];
-
-            function flushParagraph() {
-                if (currentParagraph) {
-                    container.appendChild(currentParagraph);
-                    currentParagraph = null;
-                }
-            }
-
-            function flushTable() {
-                if (currentTableRows.length > 0) {
-                    const table = document.createElement('table');
-                    table.className = 'word-table';
-
-                    currentTableRows.forEach((rowCells, index) => {
-                        const tr = document.createElement('tr');
-                        rowCells.forEach(cellText => {
-                            const cell = document.createElement(index === 0 && (cellText.toLowerCase().includes('english') || cellText.toLowerCase().includes('translation')) ? 'th' : 'td');
-                            cell.innerHTML = formatInlineMarkdown(cellText);
-                            tr.appendChild(cell);
-                        });
-                        table.appendChild(tr);
-                    });
-
-                    container.appendChild(table);
-                    currentTableRows = [];
-                }
-            }
-
-            lines.forEach(line => {
-                const trimmed = line.trim();
-
-                if (trimmed.startsWith('### ')) {
-                    flushParagraph();
-                    flushTable();
-                    const h3 = document.createElement('h3');
-                    h3.innerHTML = formatInlineMarkdown(trimmed.replace('### ', ''));
-                    container.appendChild(h3);
-                } else if (trimmed.startsWith('> ')) {
-                    flushParagraph();
-                    flushTable();
-                    const blockquote = document.createElement('blockquote');
-                    blockquote.innerHTML = formatInlineMarkdown(trimmed.replace('> ', ''));
-                    container.appendChild(blockquote);
-                } else if (trimmed.includes(' - ') && !trimmed.startsWith('>') && trimmed !== '') {
-                    flushParagraph();
-                    const cells = trimmed.split(' - ').map(c => c.trim());
-                    currentTableRows.push(cells);
-                } else if (trimmed === '') {
-                    flushParagraph();
-                    flushTable();
-                } else {
-                    flushTable();
-                    if (!currentParagraph) {
-                        currentParagraph = document.createElement('p');
-                        currentParagraph.innerHTML = formatInlineMarkdown(trimmed);
-                    } else {
-                        currentParagraph.innerHTML += ' ' + formatInlineMarkdown(trimmed);
-                    }
-                }
-            });
-
-            flushParagraph();
-            flushTable();
-            return container;
-        }
-
-        // Inline Markdown Helper (**bold**, *italic*)
-        function formatInlineMarkdown(text) {
-            return text
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>');
         }
 
         // Render Welcome / Home Screen
@@ -463,7 +317,7 @@
             contentContainer.appendChild(card);
         }
 
-        // Fetch and Display Letter Entries
+        // Fetch and Display Letter Entries (Using lowercase filenames like a.txt, ä.txt, etc.)
         async function selectLetter(letter, btnElement) {
             if (activeLetterButton) {
                 activeLetterButton.classList.remove('active');
@@ -477,8 +331,11 @@
             loadingMsg.textContent = `Loading entries for "${letter}"...`;
             contentContainer.appendChild(loadingMsg);
 
+            // Convert letter to lowercase for fetching lowercase text files (e.g., a.txt, ä.txt)
+            const fileName = letter.toLowerCase();
+
             try {
-                const response = await fetch(`${letter}.txt`);
+                const response = await fetch(`${fileName}.txt`);
                 if (!response.ok) {
                     throw new Error(`Could not load entries (Status: ${response.status})`);
                 }
@@ -490,25 +347,24 @@
                 errorMsg.className = 'state-message';
                 errorMsg.style.borderColor = '#9b2c2c';
                 errorMsg.style.color = '#c53030';
-                errorMsg.textContent = `No dictionary file found for letter "${letter}" or failed to load. (Ensure "${letter}.txt" is uploaded in the main directory).`;
+                errorMsg.textContent = `No dictionary file found for letter "${letter}" or failed to load. (Ensure "${fileName}.txt" is uploaded in the main directory).`;
                 contentContainer.appendChild(errorMsg);
             }
         }
 
-        // Parse File Content and Render Word Cards
+        // Parse File Content and Render Pure Table View
         function renderEntries(letter, fileContent) {
             contentContainer.innerHTML = '';
 
-            // Add the "Words - [letter]" title header
+            // 1. Title Header ("WORDS - A")
             const sectionTitle = document.createElement('h2');
             sectionTitle.className = 'section-header';
             sectionTitle.textContent = `Words - ${letter}`;
             contentContainer.appendChild(sectionTitle);
 
-            const rawEntries = fileContent.split(/\n\s*---\s*\n/);
-            const validEntries = rawEntries.map(e => e.trim()).filter(e => e.length > 0);
+            const lines = fileContent.split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
-            if (validEntries.length === 0) {
+            if (lines.length === 0) {
                 const emptyMsg = document.createElement('div');
                 emptyMsg.className = 'state-message';
                 emptyMsg.textContent = `No entries listed under letter "${letter}" yet.`;
@@ -516,45 +372,28 @@
                 return;
             }
 
-            const listWrapper = document.createElement('div');
-            listWrapper.className = 'word-list';
+            // 2. Wrap Table Inside Card Container
+            const tableCard = document.createElement('div');
+            tableCard.className = 'table-card';
 
-            validEntries.forEach(entryText => {
-                const lines = entryText.split('\n');
-                const headerLine = lines[0] || '';
-                const bodyLines = lines.slice(1).join('\n');
+            const table = document.createElement('table');
+            table.className = 'word-table';
 
-                const parts = headerLine.split('|').map(p => p.trim());
-                const wordName = parts[0] || 'Unknown Word';
-                const wordPos = parts[1] || '';
+            lines.forEach(line => {
+                const tr = document.createElement('tr');
+                const cells = line.split(' - ').map(c => c.trim());
 
-                const card = document.createElement('div');
-                card.className = 'word-card';
+                cells.forEach(cellText => {
+                    const cell = document.createElement('td');
+                    cell.textContent = cellText;
+                    tr.appendChild(cell);
+                });
 
-                const header = document.createElement('div');
-                header.className = 'word-header';
-
-                const title = document.createElement('span');
-                title.className = 'word-title';
-                title.textContent = wordName;
-                header.appendChild(title);
-
-                if (wordPos) {
-                    const pos = document.createElement('span');
-                    pos.className = 'word-pos';
-                    pos.textContent = wordPos;
-                    header.appendChild(pos);
-                }
-
-                card.appendChild(header);
-
-                const definitionElement = parseMarkdown(bodyLines);
-                card.appendChild(definitionElement);
-
-                listWrapper.appendChild(card);
+                table.appendChild(tr);
             });
 
-            contentContainer.appendChild(listWrapper);
+            tableCard.appendChild(table);
+            contentContainer.appendChild(tableCard);
         }
 
         // Home Button Event Listener
