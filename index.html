@@ -428,7 +428,7 @@
             desc.textContent = 'Explore the living vocabulary of the Envilian language. Select any letter from the navigation sidebar on your left to browse terms, roots, and meanings.';
             card.appendChild(desc);
 
-            // Stats Counter Container
+            // Stats Counter Container (Total Words only)
             const statsContainer = document.createElement('div');
             statsContainer.className = 'stats-container';
             statsContainer.innerHTML = `
@@ -436,17 +436,12 @@
                     <span class="stat-number" id="totalWords">...</span>
                     <span class="stat-label">Total Words</span>
                 </div>
-                <div class="stat-box">
-                    <span class="stat-number" id="activeLetters">...</span>
-                    <span class="stat-label">Letters Used</span>
-                </div>
             `;
             card.appendChild(statsContainer);
             contentContainer.appendChild(card);
 
-            // Calculate stats asynchronously
+            // Calculate total word count asynchronously
             let wordCount = 0;
-            let lettersWithFiles = 0;
 
             for (let letter of alphabet) {
                 const fileName = letter.toLowerCase();
@@ -457,16 +452,13 @@
                         const lines = textData.split('\n').map(l => l.trim()).filter(l => l.length > 0);
                         if (lines.length > 0) {
                             wordCount += lines.length;
-                            lettersWithFiles++;
                         }
                     }
                 } catch (err) {}
             }
 
             const totalWordsElem = document.getElementById('totalWords');
-            const activeLettersElem = document.getElementById('activeLetters');
             if (totalWordsElem) totalWordsElem.textContent = wordCount;
-            if (activeLettersElem) activeLettersElem.textContent = lettersWithFiles;
         }
 
         function renderTranslateScreen() {
