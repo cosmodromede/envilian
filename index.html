@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Envilian</title>
+    <title>Envilian Dictionary</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <style>
         :root {
             --bg-color: #f7f5f0;
-            --sidebar-color: #c71585;      /* Dark hot pink */
-            --sidebar-border: #900f60;     /* Deeper pink border */
+            --sidebar-color: #c71585;
+            --sidebar-border: #900f60;
             --card-bg: #ffffff;
             --card-border: #d0cbc2;
             --text-main: #2c3e50;
@@ -36,7 +36,6 @@
             overflow: hidden;
         }
 
-        /* Banner Styling */
         header.banner {
             height: 140px;
             width: 100%;
@@ -48,16 +47,14 @@
             border-bottom: 3px solid var(--sidebar-border);
         }
 
-        /* Workspace Layout */
         .workspace {
             display: flex;
             flex: 1;
             overflow: hidden;
         }
 
-        /* Sidebar Styling */
         nav.sidebar {
-            width: 76px;
+            width: 96px;
             background-color: var(--sidebar-color);
             border-right: 3px solid var(--sidebar-border);
             display: flex;
@@ -82,7 +79,6 @@
             opacity: 0.85;
         }
 
-        /* Search Bar & Translate Nav Styling */
         .search-container {
             padding: 10px 8px;
             width: 100%;
@@ -119,20 +115,20 @@
         }
 
         .translate-nav-btn {
-            width: 60px;
-            height: 32px;
+            width: 80px;
+            height: 36px;
             margin-bottom: 8px;
             background-color: rgba(255, 255, 255, 0.15);
             border: 2px solid rgba(255, 255, 255, 0.3);
             color: #ffffff;
-            font-size: 0.7rem;
+            font-size: 0.8rem;
             font-weight: 600;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: background-color 0.2s ease, border-color 0.2s ease;
-            text-transform: uppercase;
+            text-transform: capitalize;
         }
 
         .translate-nav-btn:hover, .translate-nav-btn.active {
@@ -186,7 +182,6 @@
             font-weight: 700;
         }
 
-        /* Main Content Area */
         main.content-area {
             flex: 1;
             overflow-y: auto;
@@ -201,7 +196,6 @@
             max-width: 850px;
         }
 
-        /* Section Header for Views */
         .section-header {
             font-size: 2rem;
             font-weight: 700;
@@ -213,7 +207,6 @@
             letter-spacing: 0.05em;
         }
 
-        /* Welcome Screen & Translate Card */
         .welcome-card, .translate-card {
             background: var(--card-bg);
             border: 2px solid var(--card-border);
@@ -244,7 +237,6 @@
             margin-bottom: 24px;
         }
 
-        /* Translator Specific Elements */
         .translator-box {
             display: flex;
             gap: 12px;
@@ -288,9 +280,9 @@
             border: 2px solid var(--card-border);
             font-size: 1.1rem;
             color: var(--text-main);
+            text-align: left;
         }
 
-        /* Table Card Container */
         .table-card {
             background: var(--card-bg);
             border: 2px solid var(--card-border);
@@ -298,7 +290,6 @@
             padding: 24px;
         }
 
-        /* Table Styling */
         .word-table {
             width: 100%;
             border-collapse: collapse;
@@ -323,7 +314,6 @@
             background-color: #fbf9f5;
         }
 
-        /* States (Loading / Error / Empty) */
         .state-message {
             text-align: center;
             padding: 60px 20px;
@@ -353,9 +343,7 @@
         </nav>
 
         <main class="content-area">
-            <div class="content-container" id="contentContainer">
-                <!-- Dynamically populated via JS -->
-            </div>
+            <div class="content-container" id="contentContainer"></div>
         </main>
     </div>
 
@@ -404,11 +392,11 @@
             card.appendChild(logo);
 
             const title = document.createElement('h1');
-            title.textContent = 'Envilian Dictionary';
+            title.textContent = 'Änviilienêske Wódorleytsora';
             card.appendChild(title);
 
             const desc = document.createElement('p');
-            desc.textContent = 'The dictionary for Envilian, a conlang created by Cosmodromede. (v2.4)';
+            desc.textContent = 'Explore the living vocabulary of the Envilian language. Select any letter from the navigation sidebar on your left to browse terms, roots, and meanings.';
             card.appendChild(desc);
 
             contentContainer.appendChild(card);
@@ -429,7 +417,7 @@
             card.appendChild(title);
 
             const desc = document.createElement('p');
-            desc.textContent = 'Type an English word below to look up its translation in the Envilian dictionary.';
+            desc.textContent = 'Type an English word below to look up its translation across all dictionary files.';
             card.appendChild(desc);
 
             const box = document.createElement('div');
@@ -456,39 +444,44 @@
 
             contentContainer.appendChild(card);
 
-            // Hook up translation lookup logic
             const performTranslation = async () => {
                 const query = input.value.trim().toLowerCase();
                 if (!query) return;
 
                 resultArea.style.display = 'block';
                 resultArea.className = 'state-message';
-                resultArea.textContent = `Translating "${query}"...`;
+                resultArea.textContent = `Translating "${query}" across dictionary files...`;
 
-                try {
-                    // For now checking a.txt (you can expand to loop through all letter files later)
-                    const response = await fetch('a.txt');
-                    if (!response.ok) throw new Error('Dictionary file not found');
-                    const textData = await response.text();
+                let foundMatches = [];
 
-                    const lines = textData.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-                    // Column 3 is translation (index 2 when split by ' - ')
-                    const match = lines.find(line => {
-                        const cells = line.split(' - ').map(c => c.trim());
-                        return cells[2] && cells[2].toLowerCase() === query;
-                    });
+                for (let letter of alphabet) {
+                    const fileName = letter.toLowerCase();
+                    try {
+                        const response = await fetch(`${fileName}.txt`);
+                        if (response.ok) {
+                            const textData = await response.text();
+                            const lines = textData.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                            
+                            lines.forEach(line => {
+                                const cells = line.split(' - ').map(c => c.trim());
+                                if (cells[2] && cells[2].toLowerCase().includes(query)) {
+                                    foundMatches.push(cells);
+                                }
+                            });
+                        }
+                    } catch (err) {}
+                }
 
-                    if (match) {
-                        const cells = match.split(' - ').map(c => c.trim());
-                        resultArea.className = 'translation-result';
-                        resultArea.innerHTML = `<strong>English:</strong> ${cells[2]}<br><strong>Envilian:</strong> ${cells[0]}<br><strong>Pronunciation:</strong> ${cells[1]}`;
-                    } else {
-                        resultArea.className = 'translation-result';
-                        resultArea.textContent = `No translation found for "${query}".`;
-                    }
-                } catch (err) {
+                if (foundMatches.length > 0) {
                     resultArea.className = 'translation-result';
-                    resultArea.textContent = `Error reading dictionary files.`;
+                    let htmlContent = `<strong>Results for "${query}":</strong><br><br>`;
+                    foundMatches.forEach(match => {
+                        htmlContent += `• <strong>Envilian:</strong> ${match[0]} | <strong>Pronunciation:</strong> ${match[1]} | <strong>Translation:</strong> ${match[2]}<br>`;
+                    });
+                    resultArea.innerHTML = htmlContent;
+                } else {
+                    resultArea.className = 'translation-result';
+                    resultArea.textContent = `No translation found for "${query}".`;
                 }
             };
 
@@ -578,7 +571,6 @@
             contentContainer.appendChild(tableCard);
         }
 
-        // Search Bar Event Listener
         searchInput.addEventListener('keypress', async function (e) {
             if (e.key === 'Enter') {
                 const query = searchInput.value.trim().toLowerCase();
@@ -589,25 +581,25 @@
                 contentContainer.innerHTML = '';
                 const loadingMsg = document.createElement('div');
                 loadingMsg.className = 'state-message';
-                loadingMsg.textContent = `Searching for "${query}"...`;
+                loadingMsg.textContent = `Searching for "${query}" across all dictionary files...`;
                 contentContainer.appendChild(loadingMsg);
 
-                try {
-                    const response = await fetch('a.txt');
-                    if (!response.ok) throw new Error('File not found');
-                    const textData = await response.text();
-                    
-                    const lines = textData.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-                    const matches = lines.filter(line => line.toLowerCase().includes(query));
+                let allMatches = [];
 
-                    renderSearchResults(query, matches);
-                } catch (error) {
-                    contentContainer.innerHTML = '';
-                    const errorMsg = document.createElement('div');
-                    errorMsg.className = 'state-message';
-                    errorMsg.textContent = `No results found or error reading dictionary files.`;
-                    contentContainer.appendChild(errorMsg);
+                for (let letter of alphabet) {
+                    const fileName = letter.toLowerCase();
+                    try {
+                        const response = await fetch(`${fileName}.txt`);
+                        if (response.ok) {
+                            const textData = await response.text();
+                            const lines = textData.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                            const matches = lines.filter(line => line.toLowerCase().includes(query));
+                            allMatches = allMatches.concat(matches);
+                        }
+                    } catch (err) {}
                 }
+
+                renderSearchResults(query, allMatches);
             }
         });
 
