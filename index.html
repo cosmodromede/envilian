@@ -323,34 +323,35 @@
             border: 2px solid var(--card-border);
             border-radius: 0;
         }
+
         .stats-container {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    margin-top: 30px;
-    padding-top: 25px;
-    border-top: 2px solid var(--card-border);
-}
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 2px solid var(--card-border);
+        }
 
-.stat-box {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
+        .stat-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-.stat-number {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: var(--sidebar-color);
-}
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--sidebar-color);
+        }
 
-.stat-label {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-top: 4px;
-}
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 4px;
+        }
     </style>
 </head>
 <body>
@@ -405,67 +406,67 @@
             isTranslateActive = false;
             translateNavBtn.classList.remove('active');
         }
-async function renderWelcomeScreen()
-    clearActiveStates();
-    contentContainer.innerHTML = '';
-    
-    const card = document.createElement('div');
-    card.className = 'welcome-card';
 
-    const logo = document.createElement('img');
-    logo.className = 'welcome-logo';
-    logo.src = 'flag.png';
-    logo.alt = 'Envilian Logo';
-    card.appendChild(logo);
+        async function renderWelcomeScreen() {
+            clearActiveStates();
+            contentContainer.innerHTML = '';
+            
+            const card = document.createElement('div');
+            card.className = 'welcome-card';
 
-    const title = document.createElement('h1');
-    title.textContent = 'Änviilienêske Wódorleytsora';
-    card.appendChild(title);
+            const logo = document.createElement('img');
+            logo.className = 'welcome-logo';
+            logo.src = 'flag.png';
+            logo.alt = 'Envilian Logo';
+            card.appendChild(logo);
 
-    const desc = document.createElement('p');
-    desc.textContent = 'Explore the living vocabulary of the Envilian language. Select any letter from the navigation sidebar on your left to browse terms, roots, and meanings.';
-    card.appendChild(desc);
+            const title = document.createElement('h1');
+            title.textContent = 'Änviilienêske Wódorleytsora';
+            card.appendChild(title);
 
-    // Stats Counter Container
-    const statsContainer = document.createElement('div');
-    statsContainer.className = 'stats-container';
-    statsContainer.innerHTML = `
-        <div class="stat-box">
-            <span class="stat-number" id="totalWords">...</span>
-            <span class="stat-label">Total Words</span>
-        </div>
-        <div class="stat-box">
-            <span class="stat-number" id="activeLetters">...</span>
-            <span class="stat-label">Letters Used</span>
-        </div>
-    `;
-    card.appendChild(statsContainer);
-    contentContainer.appendChild(card);
+            const desc = document.createElement('p');
+            desc.textContent = 'Explore the living vocabulary of the Envilian language. Select any letter from the navigation sidebar on your left to browse terms, roots, and meanings.';
+            card.appendChild(desc);
 
-    // Calculate stats asynchronously
-    let wordCount = 0;
-    let lettersWithFiles = 0;
+            // Stats Counter Container
+            const statsContainer = document.createElement('div');
+            statsContainer.className = 'stats-container';
+            statsContainer.innerHTML = `
+                <div class="stat-box">
+                    <span class="stat-number" id="totalWords">...</span>
+                    <span class="stat-label">Total Words</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-number" id="activeLetters">...</span>
+                    <span class="stat-label">Letters Used</span>
+                </div>
+            `;
+            card.appendChild(statsContainer);
+            contentContainer.appendChild(card);
 
-    for (let letter of alphabet) {
-        const fileName = letter.toLowerCase();
-        try {
-            const response = await fetch(`${fileName}.txt`);
-            if (response.ok) {
-                const textData = await response.text();
-                const lines = textData.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-                if (lines.length > 0) {
-                    wordCount += lines.length;
-                    lettersWithFiles++;
-                }
+            // Calculate stats asynchronously
+            let wordCount = 0;
+            let lettersWithFiles = 0;
+
+            for (let letter of alphabet) {
+                const fileName = letter.toLowerCase();
+                try {
+                    const response = await fetch(`${fileName}.txt`);
+                    if (response.ok) {
+                        const textData = await response.text();
+                        const lines = textData.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                        if (lines.length > 0) {
+                            wordCount += lines.length;
+                            lettersWithFiles++;
+                        }
+                    }
+                } catch (err) {}
             }
-        } catch (err) {}
-    }
 
-    const totalWordsElem = document.getElementById('totalWords');
-    const activeLettersElem = document.getElementById('activeLetters');
-    if (totalWordsElem) totalWordsElem.textContent = wordCount;
-    if (activeLettersElem) activeLettersElem.textContent = lettersWithFiles;
-}
+            const totalWordsElem = document.getElementById('totalWords');
+            const activeLettersElem = document.getElementById('activeLetters');
+            if (totalWordsElem) totalWordsElem.textContent = wordCount;
+            if (activeLettersElem) activeLettersElem.textContent = lettersWithFiles;
         }
 
         function renderTranslateScreen() {
