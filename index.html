@@ -439,7 +439,7 @@
         let isTranslateActive = false;
         let currentLang = 'env'; // 'env' for Envilian, 'en' for English
 
-        // Language text dictionaries
+        // Complete Language text dictionaries
         const langData = {
             env: {
                 title: 'Änviilienêske Wódorleytsora',
@@ -450,24 +450,44 @@
                 translateBtn: 'Färtakselaên',
                 placeholderSearch: 'Syxaên...',
                 placeholderTranslate: 'Enteraên Anêgelterrenêske vort...',
-                navTranslate: 'Färtakselaên',
+                navTranslate: 'Färtlaên',
                 colEnvilian: 'Änviilienêsk',
                 colPronunciation: 'Utspreäk',
-                colTranslation: 'Färtakselori'
+                colTranslation: 'Färtakselori',
+                loadingEntries: (letter) => `Ladaên äntrysa fuero "${letter}"...`,
+                loadingSearch: (query) => `Syxaên föra "${query}" amonêge alle wódorleytsora bustanda...`,
+                loadingTranslate: (query) => `Färtakselaên "${query}" amonêge wódorleytsora bustanda...`,
+                noFileError: (letter, fileName) => `Naêje wódorleytsora bustand fyndaên fän lätter "${letter}" aijx faalaên te ladaên. (Mak kyt "${fileName}.txt" is uploadaên in de hauêpte direktoria).`,
+                noEntries: (letter) => `Naê äntrysa lusta i lätter "${letter}" noio.`,
+                noSearch: (query) => `Naê wódorleytsora äntrysa yberaijegekumêste "${query}".`,
+                noTranslate: (query) => `Naê färtakselori fyndaên fuero "${query}".`,
+                resultsFor: (query) => `Iskomesa fyr "${query}":`,
+                wordsHeader: (letter) => `Vorta - ${letter}`,
+                searchHeader: (query) => `Syxêiskomesa: "${query}"`
             },
             en: {
                 title: 'Envilian Dictionary',
-                welcomeDesc: 'Explore the living vocabulary translated into English. Select any letter from the navigation sidebar on your left to browse terms, roots, and meanings.',
+                welcomeDesc: 'Explore the living vocabulary of the Envilian language. Select any letter from the navigation sidebar on your left to browse terms, roots, and meanings.',
                 totalWords: 'Total Words',
-                translateTitle: 'English Translator',
+                translateTitle: 'English to Envilian Translator',
                 translateDesc: 'Type an English word below to look up its translation across all dictionary files.',
                 translateBtn: 'Translate',
                 placeholderSearch: 'Search...',
                 placeholderTranslate: 'Enter English word...',
                 navTranslate: 'Translate',
-                colEnvilian: 'Term',
+                colEnvilian: 'Envilian',
                 colPronunciation: 'Pronunciation',
-                colTranslation: 'Meaning'
+                colTranslation: 'Translation',
+                loadingEntries: (letter) => `Loading entries for "${letter}"...`,
+                loadingSearch: (query) => `Searching for "${query}" across all dictionary files...`,
+                loadingTranslate: (query) => `Translating "${query}" across dictionary files...`,
+                noFileError: (letter, fileName) => `No dictionary file found for letter "${letter}" or failed to load. (Ensure "${fileName}.txt" is uploaded in the main directory).`,
+                noEntries: (letter) => `No entries listed under letter "${letter}" yet.`,
+                noSearch: (query) => `No dictionary entries matched "${query}".`,
+                noTranslate: (query) => `No translation found for "${query}".`,
+                resultsFor: (query) => `Results for "${query}":`,
+                wordsHeader: (letter) => `Words - ${letter}`,
+                searchHeader: (query) => `Search Results: "${query}"`
             }
         };
 
@@ -486,7 +506,6 @@
             refreshCurrentView();
         });
 
-        // Keeps track of what the user is currently looking at so switching languages updates the text seamlessly
         let currentViewState = { type: 'welcome' };
 
         function refreshCurrentView() {
@@ -497,7 +516,6 @@
             } else if (currentViewState.type === 'letter') {
                 selectLetter(currentViewState.letter, currentViewState.btnElement, true);
             } else if (currentViewState.type === 'search') {
-                // re-trigger search query view
                 triggerSearch(currentViewState.query);
             }
         }
@@ -625,7 +643,7 @@
 
                 resultArea.style.display = 'block';
                 resultArea.className = 'state-message';
-                resultArea.textContent = `Translating "${query}" across dictionary files...`;
+                resultArea.textContent = langData[currentLang].loadingTranslate(query);
 
                 let foundMatches = [];
 
@@ -649,14 +667,14 @@
 
                 if (foundMatches.length > 0) {
                     resultArea.className = 'translation-result';
-                    let htmlContent = `<strong>Results for "${query}":</strong><br><br>`;
+                    let htmlContent = `<strong>${langData[currentLang].resultsFor(query)}</strong><br><br>`;
                     foundMatches.forEach(match => {
                         htmlContent += `• <strong>${langData[currentLang].colEnvilian}:</strong> ${match[0]} | <strong>${langData[currentLang].colPronunciation}:</strong> ${match[1]} | <strong>${langData[currentLang].colTranslation}:</strong> ${match[2]}<br>`;
                     });
                     resultArea.innerHTML = htmlContent;
                 } else {
                     resultArea.className = 'translation-result';
-                    resultArea.textContent = `No translation found for "${query}".`;
+                    resultArea.textContent = langData[currentLang].noTranslate(query);
                 }
             };
 
@@ -677,7 +695,7 @@
             contentContainer.innerHTML = '';
             const loadingMsg = document.createElement('div');
             loadingMsg.className = 'state-message';
-            loadingMsg.textContent = `Loading entries for "${letter}"...`;
+            loadingMsg.textContent = langData[currentLang].loadingEntries(letter);
             contentContainer.appendChild(loadingMsg);
 
             const fileName = letter.toLowerCase();
@@ -695,7 +713,7 @@
                 errorMsg.className = 'state-message';
                 errorMsg.style.borderColor = '#9b2c2c';
                 errorMsg.style.color = '#c53030';
-                errorMsg.textContent = `No dictionary file found for letter "${letter}" or failed to load. (Ensure "${fileName}.txt" is uploaded in the main directory).`;
+                errorMsg.textContent = langData[currentLang].noFileError(letter, fileName);
                 contentContainer.appendChild(errorMsg);
             }
         }
@@ -705,7 +723,7 @@
 
             const sectionTitle = document.createElement('h2');
             sectionTitle.className = 'section-header';
-            sectionTitle.textContent = `Words - ${letter}`;
+            sectionTitle.textContent = langData[currentLang].wordsHeader(letter);
             contentContainer.appendChild(sectionTitle);
 
             const lines = fileContent.split('\n').map(l => l.trim()).filter(l => l.length > 0);
@@ -713,7 +731,7 @@
             if (lines.length === 0) {
                 const emptyMsg = document.createElement('div');
                 emptyMsg.className = 'state-message';
-                emptyMsg.textContent = `No entries listed under letter "${letter}" yet.`;
+                emptyMsg.textContent = langData[currentLang].noEntries(letter);
                 contentContainer.appendChild(emptyMsg);
                 return;
             }
@@ -764,7 +782,7 @@
             contentContainer.innerHTML = '';
             const loadingMsg = document.createElement('div');
             loadingMsg.className = 'state-message';
-            loadingMsg.textContent = `Searching for "${query}" across all dictionary files...`;
+            loadingMsg.textContent = langData[currentLang].loadingSearch(query);
             contentContainer.appendChild(loadingMsg);
 
             let allMatches = [];
@@ -790,13 +808,13 @@
 
             const sectionTitle = document.createElement('h2');
             sectionTitle.className = 'section-header';
-            sectionTitle.textContent = `Search Results: "${query}"`;
+            sectionTitle.textContent = langData[currentLang].searchHeader(query);
             contentContainer.appendChild(sectionTitle);
 
             if (matches.length === 0) {
                 const emptyMsg = document.createElement('div');
                 emptyMsg.className = 'state-message';
-                emptyMsg.textContent = `No dictionary entries matched "${query}".`;
+                emptyMsg.textContent = langData[currentLang].noSearch(query);
                 contentContainer.appendChild(emptyMsg);
                 return;
             }
